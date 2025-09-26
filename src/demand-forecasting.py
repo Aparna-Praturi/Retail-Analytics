@@ -241,6 +241,14 @@ def walk_forward_validation(X, y, params, use_log=True, horizon=26):
         X_train, y_train = X.iloc[:start], y.iloc[:start]
         X_val, y_val = X.iloc[start:start+horizon], y.iloc[start:start+horizon]
 
+        # store_mean = y_train.mean()
+        # X_train = X_train.copy()
+        # X_val = X_val.copy()
+
+        # Ratios
+        # X_train.loc[:, "sales_vs_store"] = y_train / store_mean
+        # X_val.loc[:, "sales_vs_store"] = y_val / store_mean
+
         y_train_model = np.log1p(y_train) if use_log else y_train
 
         model = XGBRegressor(**params)
@@ -282,11 +290,10 @@ def tune_xgb_per_store(df, horizon=26, n_trials=30):
        
         # --- Aggregate sales + exogenous features ---
         group = group.groupby("date").agg({
-            "Weekly_Sales": "sum",
-            "IsHoliday": "mean",        
-            "Total_MarkDown": "sum",
-            'sales_vs_store':'mean',
-            'sales_vs_dept':'mean'
+            "Weekly_Sales": "sum"
+            # "IsHoliday": "mean",        
+            # "Total_MarkDown": "sum"
+          
         }).reset_index()
         
         group = group.sort_values("date").set_index("date")
@@ -384,11 +391,9 @@ def tune_xgb_chain(df, horizon=26, n_trials=30):
     group = df.copy()
     group["date"] = pd.to_datetime(group["Date"])
     group = group.groupby("date").agg({
-    "Weekly_Sales": "sum",
-    "IsHoliday": "mean",        
-    "Total_MarkDown": "sum",
-    'sales_vs_store':'mean',
-    'sales_vs_dept':'mean'
+    "Weekly_Sales": "sum"
+    # "IsHoliday": "mean",        
+    # "Total_MarkDown": "sum",
 }).reset_index()
     group = group.sort_values("date").set_index("date")
 
@@ -510,7 +515,7 @@ def run_full_pipeline(horizon_short=8, horizon_long=52):
     # results.append(pd.DataFrame([prophet_chain]))
 
     # XGBoost (Chain)
-    xgb_chain  = tune_xgb_chain(df, horizon=26, n_trials=30)
+    xgb_chain  = tune_xgb_chain(df, horizon=20, n_trials=40)
     results.append(pd.DataFrame([xgb_chain]))
 
     print("Running Prophet + XGBoost for each Store...")
