@@ -117,6 +117,8 @@ def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
 # Tuned Prophet Forecast (Chain/Store)
 # -------------------------------
 def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
+    df = df[['Store','Date','Weekly_Sales']].copy()
+
     if level == "Chain":
         data = df.copy()
     elif level == "Store":
@@ -185,9 +187,9 @@ def save_best_model(model_obj, level, store, model_name):
     model_dir.mkdir(parents=True, exist_ok=True)
 
     if pd.isna(store):  # Chain level
-        filename = f"{model_name}_Chain.pkl"
+        filename = f"_Chain_{model_name}.pkl"
     else:
-        filename = f"{model_name}_Store_{int(store)}.pkl"
+        filename = f"Store_{int(store)}_{model_name}_.pkl"
 
     model_path = model_dir / filename
     joblib.dump(model_obj, model_path)
