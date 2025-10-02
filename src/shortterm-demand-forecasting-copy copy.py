@@ -41,8 +41,8 @@ warnings.filterwarnings("ignore")
 
 
 def seasonal_candidates_short_term(n_train_weeks: int):
-    cands = [1, 4, 8, 13]  # 1 means "no seasonality"
-    if n_train_weeks >= 2 * 26:   # only if >= ~1 year of history
+    cands = [1, 4, 8, 13] 
+    if n_train_weeks >= 2 * 26:   
         cands.append(26)
     return cands
 
@@ -120,7 +120,7 @@ def sarimax_objective_short(trial, y_train_tune: pd.Series, y_val_tune: pd.Serie
 # ------------------------------------
 # SARIMAX (WITH exog) with Optuna
 # ------------------------------------
-def fit_sarimax_short_term(store, df, exog_cols=None, horizon=8, n_trials=20):
+def fit_sarimax_short_term(store, df, exog_cols=None, horizon=4, n_trials=20):
     """
     Short-horizon (8w) SARIMAX tuning & walk-forward test evaluation.
     Uses df['Weekly_Sales'] and ALL other columns as exog (excluding Store/Date).
@@ -325,7 +325,7 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
 
 
 
-def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=20):
+def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=4, n_trials=30):
     """
     Direct LightGBM model training for sales prediction (non-hybrid).
     Uses calendar features, lags of Weekly_Sales, and exogenous columns.
@@ -397,7 +397,7 @@ def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=20
 # -----------------------------
 # Naive baseline (now takes df)
 # -----------------------------
-def naive_forecast(store, df, horizon=8):
+def naive_forecast(store, df, horizon=4):
     series = df['Weekly_Sales'].asfreq('W-FRI').fillna(0).sort_index()
     train_size = int(len(series) * 0.8)
     y_train, y_test = series.iloc[:train_size], series.iloc[train_size:]
@@ -435,7 +435,7 @@ def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
         # # 3. Append SARIMAX metrics (Note: using sarima_fit as Trained_Model here)
         sarima_metrics["Level"] = "Store"
         sarima_metrics["Trained_Model"] = sarima_fit
-        results.append(sarima_metrics)
+        results.append(sarima_metrics) 
 
         # # 4. Run Hybrid model (passing the full result tuple 'out')
         # # The hybrid model needs to be corrected as well (see next section)
@@ -449,7 +449,7 @@ def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
         print(f"⚠️ SARIMAX/Hybrid failed for Store {store}: {e}")
 
     try:
-        lgbm_res = fit_lgbm_direct_short_term(store, df_store, exog_cols=exog_cols, horizon=8, n_trials=30)
+        lgbm_res = fit_lgbm_direct_short_term(store, df_store, exog_cols=exog_cols, horizon=4, n_trials=30)
         if lgbm_res is not None:
             results.append(lgbm_res)
     except Exception as e:
@@ -481,7 +481,7 @@ def pick_best_model_per_store(results_df):
 # -----------------------------
 # Short-term pipeline (build df_store with exog; pass exog to hybrid only)
 # -----------------------------
-def run_shortterm_pipeline(horizon=8, n_jobs=6):
+def run_shortterm_pipeline(horizon=4, n_jobs=6):
     SCRIPT_DIR = Path(__file__).resolve().parent
     clean_data_path = SCRIPT_DIR.parent / 'data' / 'processed' / 'cleaned_data.csv'
     df = pd.read_csv(clean_data_path, parse_dates=['Date'])
