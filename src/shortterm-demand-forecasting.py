@@ -97,12 +97,13 @@ def sarima_objective_short(trial, y_train_tune: pd.Series, y_val_tune: pd.Series
         return float("inf")
 
 
-def fit_sarima_short_term(store, series: pd.Series, horizon=8, n_trials=10):
+def fit_sarima_short_term(store, df, horizon=8, n_trials=10):
     """
     Short-horizon (8w) SARIMA tuning & walk-forward test evaluation.
     Expects `series` weekly, numeric, DateTimeIndex, sorted.
     """
-    series = series.copy()
+    df = df.copy()
+    series = df['Weekly_Sales']
     # Ensure weekly grid; change 'W-FRI' if your week ends Sunday etc.
     if not isinstance(series.index, pd.DatetimeIndex):
         raise ValueError("Series index must be DateTimeIndex.")
@@ -240,9 +241,9 @@ def create_features(df: pd.DataFrame):
     return df
 
 
-def train_hybrid_model(store, series, horizon=8):
+def train_hybrid_model(store, df, horizon=8):
 
-    result = fit_sarima_short_term(store, series, horizon=horizon)
+    result = fit_sarima_short_term(store, df, horizon=horizon)
     if result is None:
         return {"Store": store, "Model": "Naive", "R2": np.nan, "Reason": "sarima_failed"}
 
@@ -252,7 +253,7 @@ def train_hybrid_model(store, series, horizon=8):
                            if sarima_results["Transform"] == "log" 
                            else sarima_fit.fittedvalues)
 
-    df = pd.DataFrame({'y': residuals}, index=y_train.index)
+    df1 = pd.DataFrame({'y': residuals}, index=y_train.index)
     df = create_features(make_lags(df)).dropna()
     X, y_res = df.drop(columns=['y']), df['y']
 
@@ -384,17 +385,23 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
     tasks = []
     # for store in tqdm(df['Store'].unique()):
     store =10
-    series = (
+    df_store = (
         df[df['Store'] == store]
-        .groupby('Date')['Weekly_Sales']
-        .sum()
+        .groupby('Date', as_index=True)
+        .agg({
+            'Weekly_Sales': 'sum',
+            'IsHoliday': 'max', 
+            'Total_MarkDown':'mean'        
+          
+        })
         .sort_index()
+        .asfreq('W-FRI')
+        .fillna(0)
     )
-    series = series.asfreq('W-FRI')
-
+    
     # if len(series) < horizon * 3:
     #     continue
-    tasks.append((store, series))
+    tasks.append((store, df_store))
 
     # --- Run all models in parallel ---
     print(f"\n🚀 Running SARIMA + Hybrid + Naive for {len(tasks)} stores (parallel={n_jobs})...")
