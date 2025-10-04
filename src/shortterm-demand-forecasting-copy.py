@@ -15,44 +15,18 @@ warnings.simplefilter("ignore", ConvergenceWarning)
 warnings.simplefilter("ignore", UserWarning)
 
 
-# ============================================================
-# SARIMA Optuna Objective (with walk-forward)
-# ============================================================
-import numpy as np
-import pandas as pd
-import optuna
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.metrics import mean_squared_error, r2_score
-import warnings
 
-warnings.filterwarnings("ignore")
-
-
-# ============================================================
-# 1️⃣ SARIMA Objective Function (for Optuna tuning)
-# ============================================================
-import numpy as np
-import pandas as pd
-import optuna
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-from sklearn.metrics import mean_squared_error, r2_score
-import warnings
-warnings.filterwarnings("ignore")
-
-
+# Helper for SARIMA objective function
 def seasonal_candidates_short_term(n_train_weeks: int):
     cands = [1, 4, 8, 13]  # 1 means "no seasonality"
     if n_train_weeks >= 2 * 26:   # only if >= ~1 year of history
         cands.append(26)
     return cands
 
-
+# SARIMA objective function
 def sarimax_objective_short(trial, y_train_tune: pd.Series, y_val_tune: pd.Series, 
                             exog_train_tune: pd.DataFrame, exog_val_tune: pd.DataFrame):
-    """
-    Optuna objective for SARIMAX (SARIMA with Exogenous variables).
-    Uses the provided exog data for all fits.
-    """
+   
     n_train_weeks = len(y_train_tune)
     s = trial.suggest_categorical("s", seasonal_candidates_short_term(n_train_weeks))
 
@@ -85,11 +59,11 @@ def sarimax_objective_short(trial, y_train_tune: pd.Series, y_val_tune: pd.Serie
         for t in range(len(y_val_tune)):
             # Define current training and future exog data for the next step
             current_exog_train = exog_history
-            exog_future = exog_val_tune.iloc[[t]] # Exog data for the step 1 forecast
+            exog_future = exog_val_tune.iloc[[t]] 
 
             model = SARIMAX(
                 history,
-                exog=current_exog_train, # Pass exog data for the fit
+                exog=current_exog_train, 
                 order=(p, d, q),
                 seasonal_order=(P, D, Q, s),
                 enforce_stationarity=False,
@@ -114,23 +88,12 @@ def sarimax_objective_short(trial, y_train_tune: pd.Series, y_val_tune: pd.Serie
         return -float("inf")
 
 
-# -----------------------------
-# SARIMA (NO exog) with Optuna
-# -----------------------------
-# ------------------------------------
-# SARIMAX (WITH exog) with Optuna
-# ------------------------------------
+# SARIMAX with Optuna
+
 def fit_sarimax_short_term(store, df, exog_cols=None, horizon=8, n_trials=25):
-    """
-    Short-horizon (8w) SARIMAX tuning & walk-forward test evaluation.
-    Uses df['Weekly_Sales'] and ALL other columns as exog (excluding Store/Date).
-    """
+  
     df = df.copy().sort_index()
     series = df['Weekly_Sales'].copy()
-    
-    # 1. Prepare Sales (y) and Exogenous (X) data
-    # All columns EXCEPT 'Weekly_Sales' are considered exogenous here.
-    # This assumes 'Store' and 'Date' have already been handled/removed.
     
     X = df[exog_cols].copy()
     
@@ -150,7 +113,7 @@ def fit_sarimax_short_term(store, df, exog_cols=None, horizon=8, n_trials=25):
     X_test = X_test_full.iloc[:horizon]
 
     if len(y_train) < 12 or len(y_test) < 4:
-        print(f"⚠️ Store {store}: skipped SARIMAX/Hybrid - insufficient data (train={len(y_train)}, test={len(y_test)})")
+        print(f" Store {store}: skipped SARIMAX/Hybrid - insufficient data (train={len(y_train)}, test={len(y_test)})")
         return None
 
     # 3. Inner Train/Val Split for Optuna Tuning
@@ -228,6 +191,7 @@ def fit_sarimax_short_term(store, df, exog_cols=None, horizon=8, n_trials=25):
     }
     return sarima_fit, results, (y_train, y_test, X_train, X_test) # Added X_train/X_test to return
 
+## Helper functions for feature engineering for LightGBM
 
 def make_lags(df, nlags = [4,8, 13], nrolling=[4,8, 13]):
     if 'y' not in df.columns:
@@ -263,10 +227,7 @@ def create_features(df: pd.DataFrame):
 
 
 def lgbm_objective(trial, X_res, y_res, n_splits=5):
-    """
-    Optuna objective function for LightGBM hyperparameters.
-    Uses TimeSeriesSplit for robust cross-validation on residual data.
-    """
+  
     
     # 1. Suggest Hyperparameters
     param = {
@@ -280,12 +241,12 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
         'lambda_l1': trial.suggest_float('lambda_l1', 1e-8, 10.0, log=True),
         'lambda_l2': trial.suggest_float('lambda_l2', 1e-8, 10.0, log=True),
         'num_leaves': trial.suggest_int('num_leaves', 2, 64),
-        'verbose': -1, # Suppress output
+        'verbose': -1,
         'n_jobs': -1,
-        'seed': 42 # Ensure reproducibility
+        'seed': 42 
     }
 
-    # 2. Time Series Cross-Validation
+    
     # Use TimeSeriesSplit to simulate sequential residual prediction validation
     from sklearn.model_selection import TimeSeriesSplit
     tscv = TimeSeriesSplit(n_splits=n_splits)
@@ -299,6 +260,7 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
             start += step
         
     r2_list = []
+    rmse_list=[]
     n = len(X_res)  
     
     for train_index, val_index in rolling_folds_index(n, val_size=8, min_train=40, step=8):
@@ -308,7 +270,6 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
         # Check for sufficient data
         if len(y_val) == 0:
             continue
-
         try:
             model = LGBMRegressor(**param)
             model.fit(X_train, y_train, 
@@ -321,30 +282,21 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
             preds = model.predict(X_val)
             rmse = np.sqrt(mean_squared_error(y_val, preds))
             r2 = r2_score(y_val, preds)
-            r2_list.append(rmse)
+            r2_list.append(r2)
+            rmse_list.append[rmse]
         
         except Exception as e:
-            # Penalize failed trials by returning the worst possible score (inf for minimization)
-               
-            print(f"❌ Trial failed: {e}")
-          
-            return -float("inf") 
-
-    # 3. Return the Mean Cross-Validation R2
-    return np.mean(r2_list) if r2_list else -float("inf")
-
-
+            print(f"Trial failed: {e}")
+            return float("inf") 
+    return np.mean(rmse_list) if r2_list else float("inf")
 
 
 def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=35):
-    """
-    Direct LightGBM model training for sales prediction (non-hybrid).
-    Uses calendar features, lags of Weekly_Sales, and exogenous columns.
-    """
+  
     df = df.copy().sort_index()
     series = df['Weekly_Sales'].copy()
     
-    # 1. Prepare Data and Features
+    #  Prepare Data and Features
     series_df = pd.DataFrame({'y': series})
     
     # Add calendar features
@@ -358,24 +310,22 @@ def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=35
         X_exog = df[exog_cols].copy()
         X_feats = X_feats.join(X_exog, how='left')
 
-    # Drop rows with NaN (due to lags)
+    # Drop rows with NaN 
     X_feats = X_feats.dropna()
     y = X_feats['y'].copy()
     X = X_feats.drop(columns=['y'])
 
-    # 2. Data Splits
+    #  Data Splits
     train_size = int(len(y) * 0.8)
     y_train, y_test = y.iloc[:train_size], y.iloc[train_size:]
     X_train, X_test = X.iloc[:train_size], X.iloc[train_size:]
 
     if len(y_train) < 10 or len(y_test) < 4:
-        print(f"⚠️ Store {store}: skipped Direct LGBM - insufficient data.")
+        print(f"Store {store}: skipped Direct LGBM - insufficient data.")
         return None
 
-    # 3. Inner Train/Val Split for Optuna Tuning (Using full train set)
-    # LGBM objective uses TimeSeriesSplit internally, so we use the full X_train/y_train
-    
-    # 4. Optuna Study (Minimize RMSE)
+ 
+    #  Optuna Study 
     study = optuna.create_study(direction="minimize", study_name=f"lgbm_tune_direct_store_{store}")
     study.optimize(lambda trial: lgbm_objective(trial, X_train, y_train), 
                    n_trials=n_trials, show_progress_bar=False)
@@ -383,14 +333,14 @@ def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=35
     bp = study.best_params
     bp.update({'objective': 'regression', 'n_jobs': -1, 'seed': 42, 'verbose': -1})
 
-    # 5. Final Fit on Full Training Data
+    #  Final Fit on Full Training Data
     lgbm_fit = LGBMRegressor(**bp)
     lgbm_fit.fit(X_train, y_train)
 
-    # 6. Prediction on Test Set (Non-recursive prediction, simple model forecast)
+    #  Prediction on Test Set 
     preds = lgbm_fit.predict(X_test)
 
-    # 7. Metrics
+    #  Metrics
     rmse = np.sqrt(mean_squared_error(y_test, preds))
     r2 = r2_score(y_test, preds)
 
@@ -405,26 +355,28 @@ def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=35
     }
     return results
 
-# -----------------------------
-# Naive baseline (now takes df)
-# -----------------------------
-def naive_forecast(store, df, horizon=8):
+
+# Naive baseline 
+
+def naive_forecast(store, df, horizon=8, season_length=52):
     series = df['Weekly_Sales'].asfreq('W-FRI').fillna(0).sort_index()
     train_size = int(len(series) * 0.8)
-    y_train, y_test = series.iloc[:train_size], series.iloc[train_size:]
-    if len(y_test) < horizon or len(y_train) == 0:
+    y_train, y_test_full = series.iloc[:train_size], series.iloc[train_size:]
+
+    if len(y_test_full) < horizon or len(y_train) <= season_length:
         return None
-    last_value = y_train.iloc[-1]
-    preds = np.repeat(last_value, len(y_test))
+
+    y_test = y_test_full.iloc[:horizon]
+    preds = y_train.iloc[-season_length:][-horizon:].values
+
     rmse = np.sqrt(mean_squared_error(y_test, preds))
     r2 = r2_score(y_test, preds)
     return {"Store": store, "Model": "Naive", "RMSE": rmse, "R2": r2, "Level": "Store"}
 
 
 
-# -----------------------------
-# Run all models for one store (df, exog used ONLY in Hybrid)
-# -----------------------------
+
+# Run all models for one store 
 def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
     results = []  
     try:
@@ -435,15 +387,9 @@ def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
         if out is None:
             raise ValueError("SARIMAX fit skipped due to insufficient data.")
         
-        # 2. Correctly unpack the 4 data splits from the 'out' tuple's last element
         sarima_fit, sarima_metrics, data_splits = out 
-        # y_train, y_test, X_train, X_test = data_splits # This unpacks the 4 items
-        
-        # # --- The redundant, incorrect unpacking was HERE and caused the crash ---
-        # # The line below (which was in your code) is what caused the ValueError:
-        # # sarima_fit, sarima_metrics, (y_train, y_test) = out 
-
-        # # 3. Append SARIMAX metrics (Note: using sarima_fit as Trained_Model here)
+    
+        #  Append SARIMAX metrics 
         sarima_metrics["Level"] = "Store"
         sarima_metrics["Trained_Model"] = sarima_fit
         results.append(sarima_metrics) 
@@ -456,15 +402,15 @@ def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
         #     results.append(hybrid_res)
     
     except Exception as e:
-    #     # This will catch the ValueError if out is None, or any other SARIMAX error
-        print(f"⚠️ SARIMAX/Hybrid failed for Store {store}: {e}")
+         # This will catch the ValueError if out is None, or any other SARIMAX error
+        print(f" SARIMAX/Hybrid failed for Store {store}: {e}")
 
     try:
         lgbm_res = fit_lgbm_direct_short_term(store, df_store, exog_cols=exog_cols, horizon=8, n_trials=30)
         if lgbm_res is not None:
             results.append(lgbm_res)
     except Exception as e:
-        print(f"⚠️ lgbm forecast failed for Store {store}: {e}")
+        print(f" lgbm forecast failed for Store {store}: {e}")
 
 
     try:
@@ -472,14 +418,12 @@ def run_all_models_for_store(store, df_store, exog_cols=None, horizon=8):
         if naive_res is not None:
             results.append(naive_res)
     except Exception as e:
-        print(f"⚠️ Naive forecast failed for Store {store}: {e}")
+        print(f" Naive forecast failed for Store {store}: {e}")
 
     return results
 
 
-# -----------------------------
-# Best model selector (works because all models now have R2/RMSE)
-# -----------------------------
+# Best model selector 
 def pick_best_model_per_store(results_df):
     def pick_best(group):
         group = group.sort_values(by=['R2', 'RMSE'], ascending=[False, True])
@@ -487,16 +431,21 @@ def pick_best_model_per_store(results_df):
     best_models = results_df.groupby('Store', group_keys=False).apply(pick_best)
     return best_models.reset_index(drop=True)
 
+# Save Best Model Helper
+def save_best_model(model_obj, level, store, model_name):
+    model_dir = Path("saved_models") /"short-term"/ level
+    model_dir.mkdir(parents=True, exist_ok=True)
+    filename = f'Store_{int(store)}_{model_name}_.pkl'
+    joblib.dump(model_obj, model_dir / filename)
 
 
-# -----------------------------
-# Short-term pipeline (build df_store with exog; pass exog to hybrid only)
-# -----------------------------
+
+# Short-term pipeline 
 def run_shortterm_pipeline(horizon=8, n_jobs=6):
     SCRIPT_DIR = Path(__file__).resolve().parent
     clean_data_path = SCRIPT_DIR.parent / 'data' / 'processed' / 'cleaned_data.csv'
     df = pd.read_csv(clean_data_path, parse_dates=['Date'])
-    print(f"✅ Data loaded successfully!")
+    print(f" Data loaded successfully!")
 
     # ensure exog columns exist; create zeros if missing
     exog_cols= ['IsHoliday', 'Total_MarkDown']
@@ -508,7 +457,7 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
     df['Date'] = pd.to_datetime(df['Date'])
     df = df.set_index('Date')
 
-    print("\n📝 Preparing store frames...")
+    print("\n Preparing store frames...")
     tasks = []
     # (loop all stores; here you had a single store=10 for testing)
     # for store in df['Store'].unique():
@@ -534,7 +483,7 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
         # 4. Append the prepared data and store ID to the task list
         tasks.append((store, df_store))
 
-    print(f"\n🚀 Running SARIMA (no exog) + Hybrid(LGBM with exog) + Naive for {len(tasks)} stores (parallel={n_jobs})...")
+    print(f"\n Running SARIMA (no exog) + Hybrid(LGBM with exog) + Naive for {len(tasks)} stores (parallel={n_jobs})...")
     all_results = []
     with ThreadPoolExecutor(max_workers=n_jobs) as executor:
         futures = [executor.submit(run_all_models_for_store, store, df_store, exog_cols, horizon)
@@ -545,11 +494,11 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
                 if store_results:
                     all_results.extend(store_results)
             except Exception as e:
-                print(f"⚠️ Parallel task failed: {e}")
+                print(f" Parallel task failed: {e}")
 
     results_df = pd.DataFrame(all_results)
 
-    print("\n🏆 Selecting best model per store...")
+    print("\n Selecting best model per store...")
     best_models_df = pick_best_model_per_store(results_df)
 
     output_path = Path("results") / "shortterm_forecast_results_full.csv"
@@ -558,35 +507,16 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
 
     best_output_path = Path("results") / "shortterm_best_models.csv"
     best_models_df.to_csv(best_output_path, index=False)
-    print(f"📄 Best models saved to {best_output_path}")
+    print(f" Best models saved to {best_output_path}")
 
-    print("\n💾 Saving best models per store...")
+    print("\n Saving best models per store...")
     for _, row in best_models_df.iterrows():
         if row["Model"] == "SARIMA":
             save_best_model(row.get('Trained_Model'), level='Store', store=row['Store'], model_name='SARIMA')
-        elif row["Model"] == "Hybrid":
-            # Save both SARIMA and LGBM parts for the hybrid
-            if 'Trained_SARIMA' in row and row['Trained_SARIMA'] is not None:
-                save_best_model(row['Trained_SARIMA'], level='Store', store=row['Store'], model_name='SARIMA')
-            if 'Trained_LGBM' in row and row['Trained_LGBM'] is not None:
-                save_best_model(row['Trained_LGBM'], level='Store', store=row['Store'], model_name='Hybrid_LGBM')
-    print("✅ Best models saved successfully.")
+        elif row["Model"] == "LGBM_Direct":
+            save_best_model(row.get('Trained_Model'), level='Store', store=row['Store'], model_name='LGBM')  
+    print(" Best models saved successfully.")
 
-
-
-
-# ============================================================
-# Save Best Model Helper
-# ============================================================
-def save_best_model(model_obj, level, store, model_name):
-    model_dir = Path("saved_models") /"short-term"/ level
-    model_dir.mkdir(parents=True, exist_ok=True)
-    filename = f"{model_name}_{'Chain' if pd.isna(store) else f'Store_{int(store)}'}.pkl"
-    joblib.dump(model_obj, model_dir / filename)
-
-
-# ============================================================
 # Run Script
-# ============================================================
 if __name__ == "__main__":
     run_shortterm_pipeline(horizon=8, n_jobs=6)
