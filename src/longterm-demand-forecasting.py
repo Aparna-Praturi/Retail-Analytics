@@ -126,16 +126,16 @@ def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=Non
     else:
         return None
 
-    data['Date'] = pd.to_datetime(data['Date'])
     agg = data.groupby('Date')['Weekly_Sales'].sum().reset_index()
     agg.rename(columns={'Date': 'ds', 'Weekly_Sales': 'y'}, inplace=True)
-    agg = agg.sort_values('ds')
+    agg['ds'] = pd.to_datetime(agg['ds'])
+    agg = agg.set_index('ds').asfreq('W-FRI').rename_axis('ds').reset_index().sort_values('ds')
 
-    if len(agg) < horizon * 2:
-        return None
+    # log transform
+    agg['y'] = np.log1p(agg['y'])
 
     train_size = int(len(agg) * 0.8)
-    train, test = agg.iloc[:train_size], agg.iloc[train_size:]
+    train, test = agg.iloc[:train_size].copy(), agg.iloc[train_size:].copy()
 
     def objective(trial):
         params = {
@@ -144,16 +144,15 @@ def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=Non
             "seasonality_mode": trial.suggest_categorical("seasonality_mode", ["additive", "multiplicative"]),
             "n_changepoints": trial.suggest_int("n_changepoints", 5, 50),
         }
-        m = Prophet(
-            weekly_seasonality=True,
-            yearly_seasonality=True,
-            **params
-        )
+        m = Prophet(weekly_seasonality=True, yearly_seasonality=True, **params)
+        m.add_country_holidays('US')  
         m.fit(train)
-        future = m.make_future_dataframe(periods=len(test), freq='W')
+        future = m.make_future_dataframe(periods=len(test), freq='W-FRI')
         forecast = m.predict(future)
         preds = forecast.iloc[-len(test):]['yhat'].values
-        return r2_score(test['y'].values, preds)
+        # invert log
+        preds = np.expm1(preds); y_true = np.expm1(test['y'].values)
+        return r2_score(y_true, preds)
 
     study = optuna.create_study(direction="maximize")
     study.optimize(objective, n_trials=n_trials, show_progress_bar=False,n_jobs=-1)
