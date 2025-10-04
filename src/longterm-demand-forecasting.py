@@ -17,9 +17,9 @@ RESULTS_DIR = Path("results")
 RESULTS_DIR.mkdir(exist_ok=True)
 
 
-# -------------------------------
+
 # Walk-forward validation for XGBoost
-# -------------------------------
+
 def walk_forward_validation(X, y, params, use_log=True, horizon=20):
     n_total = len(y)
     window_size = int(n_total * 0.7)
@@ -39,9 +39,9 @@ def walk_forward_validation(X, y, params, use_log=True, horizon=20):
     return float(np.mean(r2_scores)), float(np.mean(rmse_scores))
 
 
-# -------------------------------
-# Tuned XGBoost Forecast (Chain/Store)
-# -------------------------------
+
+# Tuned XGBoost Forecast 
+
 def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
     df = df[['Store','Date','Weekly_Sales']].copy()
 
@@ -113,9 +113,9 @@ def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
             "RMSE": rmse, "R2": r2, "Trained_model":model}
 
 
-# -------------------------------
-# Tuned Prophet Forecast (Chain/Store)
-# -------------------------------
+
+# Tuned Prophet Forecast 
+
 def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
     df = df[['Store','Date','Weekly_Sales']].copy()
 
@@ -173,9 +173,9 @@ def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=Non
             "RMSE": rmse, "R2": r2, "Trained_model":m_best}
 
 
-# -------------------------------
+
 # Helper to save model
-# -------------------------------
+
 def save_best_model(model_obj, level, store, model_name):
     """
     Saves the trained model to a structured folder for later use.
@@ -195,29 +195,29 @@ def save_best_model(model_obj, level, store, model_name):
     return model_path
 
 
-# -------------------------------
+
 # Final Pipeline with Saving
-# -------------------------------
+
 def run_full_pipeline(horizon_long=20):
     SCRIPT_DIR = Path(__file__).resolve().parent
     clean_data_path = SCRIPT_DIR.parent / 'data' / 'processed' / 'cleaned_data.csv'
 
     df = pd.read_csv(clean_data_path)
-    print(f"✅ Data loaded successfully!")
+    print(f" Data loaded successfully!")
 
     results = []
 
-    # -------------------------------
+  
     # Chain level models
-    # -------------------------------
-    print("\n🏬 Running CHAIN level models...")
+ 
+    print("\n Running CHAIN level models...")
     results.append(xgb_forecast_tuned(df, horizon=horizon_long, level="Chain"))
     results.append(prophet_forecast_tuned(df, horizon=horizon_long, level="Chain"))
 
-    # -------------------------------
+    
     # Store level models
-    # -------------------------------
-    print("\n🏪 Running STORE level models...")
+   
+    print("\n Running STORE level models...")
     for store in tqdm(df['Store'].unique()):
         results.append(xgb_forecast_tuned(df, horizon=horizon_long, level="Store", store=store))
         results.append(prophet_forecast_tuned(df, horizon=horizon_long, level="Store", store=store))
@@ -225,9 +225,9 @@ def run_full_pipeline(horizon_long=20):
     # Convert to DataFrame
     final_results = pd.DataFrame(results)
 
-    # -------------------------------
+  
     # Determine Best Model per Store/Chain
-    # -------------------------------
+  
     def get_best_model(group):
         group = group.sort_values(by=['R2', 'RMSE'], ascending=[False, True])
         group['Best_Model'] = [True] + [False] * (len(group) - 1)
@@ -235,19 +235,19 @@ def run_full_pipeline(horizon_long=20):
 
     final_results = final_results.groupby(['Level', 'Store'], dropna=False).apply(get_best_model).reset_index(drop=True)
 
-    # -------------------------------
+  
     # Save Best Model Files
-    # -------------------------------
-    print("\n💾 Saving best models for future use...")
+
+    print("\n Saving best models for future use...")
     best_rows = final_results[final_results['Best_Model']]
     for _, row in best_rows.iterrows():
         model_obj = row.get('Trained_model', None)
         if model_obj is not None:
             save_best_model(model_obj, row['Level'], row['Store'], row['Model'])
 
-    # -------------------------------
+  
     # Save Results with Best Model Info
-    # -------------------------------
+ 
     best_models_summary = (
         final_results[final_results['Best_Model']]
         .loc[:, ['Level', 'Store', 'Model', 'R2', 'RMSE']]
