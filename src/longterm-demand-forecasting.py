@@ -42,7 +42,7 @@ def walk_forward_validation(X, y, params, use_log=True, horizon=20):
 
 # Tuned XGBoost Forecast 
 
-def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
+def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Store", store=None):
     df = df[['Store','Date','Weekly_Sales']].copy()
 
     if level == 'Chain':
@@ -110,13 +110,18 @@ def xgb_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
     r2 = r2_score(y_test, y_pred)
 
     return {"Level": level, "Store": store, "Model": "XGBoost (Tuned)", 
-            "RMSE": rmse, "R2": r2, "Trained_model":model}
+            "RMSE": rmse, "R2": r2, "Trained_model":model, "Date":y_test.index,
+        "Actual":y_test,
+        "Forecast":y_pred,
+        "x_train":y_train.index,
+        "y_train":y_train
+    }
 
 
 
 # Tuned Prophet Forecast 
 
-def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=None):
+def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Store", store=None):
     df = df[['Store','Date','Weekly_Sales']].copy()
 
     if level == "Chain":
@@ -170,9 +175,59 @@ def prophet_forecast_tuned(df, horizon=20, n_trials=30, level="Chain", store=Non
     r2 = r2_score(y_true, preds)
 
     return {"Level": level, "Store": store, "Model": "Prophet (Tuned)", 
-            "RMSE": rmse, "R2": r2, "Trained_model":m_best}
+            "RMSE": rmse, "R2": r2, "Trained_model":m_best, "Date":test['ds'],
+        "Actual":y_true,
+        "Forecast":preds
+    }
 
+# Naive baseline 
 
+def naive_forecast(store, df, horizon=20, season_length=52):
+    df['Date'] = pd.to_datetime(df['Date'])  
+    df = df.set_index('Date')              
+
+    series = (
+        df['Weekly_Sales']
+        .resample('W-FRI')
+        .sum()
+        .fillna(0)
+        .sort_index()
+)
+
+    train_size = int(len(series) * 0.8)
+    y_train, y_test_full = series.iloc[:train_size], series.iloc[train_size:]
+
+    if len(y_test_full) < horizon or len(y_train) < 1:
+        return None  # not enough data
+
+    y_test = y_test_full.iloc[:horizon]
+
+    # adjust season_length if training set is too short
+    eff_season_length = min(season_length, len(y_train))
+
+    # naive seasonal forecast OR last value if too short
+    preds = y_train.iloc[-eff_season_length:][-horizon:].values
+    if len(preds) < len(y_test):
+        # pad by repeating last value
+        preds = np.pad(preds, (len(y_test)-len(preds), 0), mode='edge')
+
+    rmse = np.sqrt(mean_squared_error(y_test, preds))
+    r2 = r2_score(y_test, preds)
+
+    return {
+        "Store": store,
+        "Model": "Naive",
+        "RMSE": rmse,
+        "R2": r2,
+        "Level": "Store",
+        "Date": y_test.index,
+        "Actual": y_test,
+        "Forecast": preds,
+        "x_train": y_train.index,
+        "y_train": y_train
+    }
+
+ 
 
 # Helper to save model
 
@@ -213,7 +268,7 @@ def run_full_pipeline(horizon_long=20):
     print("\n Running CHAIN level models...")
     results.append(xgb_forecast_tuned(df, horizon=horizon_long, level="Chain"))
     results.append(prophet_forecast_tuned(df, horizon=horizon_long, level="Chain"))
-
+    
     
     # Store level models
    
@@ -221,8 +276,8 @@ def run_full_pipeline(horizon_long=20):
     for store in tqdm(df['Store'].unique()):
         results.append(xgb_forecast_tuned(df, horizon=horizon_long, level="Store", store=store))
         results.append(prophet_forecast_tuned(df, horizon=horizon_long, level="Store", store=store))
-
-    # Convert to DataFrame
+        results.append(naive_forecast(store, df, horizon=20, season_length=52))
+    # # Convert to DataFrame
     final_results = pd.DataFrame(results)
 
   

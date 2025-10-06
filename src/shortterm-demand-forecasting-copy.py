@@ -188,7 +188,13 @@ def fit_sarimax_short_term(store, df, exog_cols=None, horizon=8, n_trials=25):
         "RMSE": rmse,
         "R2": r2,
         "Best_Params": bp,
+        "Date":y_test.index,
+        "Actual":y_test,
+        "Forecast":preds,
+        "x_train":X_train,
+        "y_train":y_train
     }
+    
     return sarima_fit, results, (y_train, y_test, X_train, X_test) # Added X_train/X_test to return
 
 ## Helper functions for feature engineering for LightGBM
@@ -274,7 +280,7 @@ def lgbm_objective(trial, X_res, y_res, n_splits=5):
             model = LGBMRegressor(**param)
             model.fit(X_train, y_train, 
                       eval_set=[(X_val, y_val)],
-                    #   early_stopping_rounds=50, # Early stop to prevent overfitting
+                    #   early_stopping_rounds=50, 
                       eval_metric='rmse',
                       callbacks=[optuna.integration.LightGBMPruningCallback(trial, 'rmse')]
                       )
@@ -351,7 +357,12 @@ def fit_lgbm_direct_short_term(store, df, exog_cols=None, horizon=8, n_trials=35
         "RMSE": rmse,
         "R2": r2,
         "Best_Params": bp,
-        "Trained_Model": lgbm_fit
+        "Trained_Model": lgbm_fit,
+        "Date":y_test.index,
+        "Actual":y_test,
+        "Forecast":preds,
+        "x_train":y_train.index,
+        "y_train":y_train
     }
     return results
 
@@ -371,7 +382,12 @@ def naive_forecast(store, df, horizon=8, season_length=52):
 
     rmse = np.sqrt(mean_squared_error(y_test, preds))
     r2 = r2_score(y_test, preds)
-    return {"Store": store, "Model": "Naive", "RMSE": rmse, "R2": r2, "Level": "Store"}
+    return {"Store": store, "Model": "Naive", "RMSE": rmse, "R2": r2, "Level": "Store",
+            "Date":y_test.index,
+        "Actual":y_test,
+        "Forecast":preds,
+        "x_train":y_train.index,
+        "y_train":y_train}
 
 
 
@@ -459,7 +475,7 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
 
     print("\n Preparing store frames...")
     tasks = []
-    # (loop all stores; here you had a single store=10 for testing)
+ 
     # for store in df['Store'].unique():
 
     for store in df['Store'].unique():
@@ -471,16 +487,16 @@ def run_shortterm_pipeline(horizon=8, n_jobs=6):
         valid_exog_cols = [c for c in exog_cols if c in agg.columns]
         agg_map.update({c: 'mean' for c in valid_exog_cols})
         
-        # 3. Resample the store's data weekly, aggregate, and fill missing weeks with 0
-        #    (Fixed: using 'agg' instead of the undefined variable 'g')
+        # Resample the store's data weekly, aggregate, and fill missing weeks with 0
+        
         df_store = agg.resample('W-FRI').agg(agg_map).fillna(0)
         
-        # Optional check: uncomment if you want to skip stores with very little history
+        
         if len(df_store) < horizon * 3:
             print(f"Skipping Store {store}: insufficient data points ({len(df_store)} weeks)")
             continue
             
-        # 4. Append the prepared data and store ID to the task list
+        #  Append the prepared data and store ID to the task list
         tasks.append((store, df_store))
 
     print(f"\n Running SARIMA (no exog) + Hybrid(LGBM with exog) + Naive for {len(tasks)} stores (parallel={n_jobs})...")
