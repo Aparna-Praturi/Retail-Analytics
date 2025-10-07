@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 
 # ====================================================
-# 1️⃣ FEATURE ENGINEERING
+# FEATURE ENGINEERING
 # ====================================================
 
 def aggregate_data(df: pd.DataFrame) -> pd.DataFrame:
@@ -88,7 +88,7 @@ def rolling_origin_splits(df, n_folds=4, horizon_weeks=12, start_buffer_weeks=26
 
 
 # ====================================================
-# 2️⃣ OPTUNA OBJECTIVE WITH TIMESERIES SPLIT
+# OPTUNA OBJECTIVE WITH TIMESERIES SPLIT
 # ====================================================
 
 def optuna_objective(trial, df, feature_cols, target_col):
@@ -133,7 +133,7 @@ def optuna_objective(trial, df, feature_cols, target_col):
 
 
 # ====================================================
-# 3️⃣ TRAIN FINAL MODEL & EVALUATE
+# 3️TRAIN FINAL MODEL & EVALUATE
 # ====================================================
 
 def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=12):
@@ -154,7 +154,7 @@ def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=12):
     rmse = np.sqrt(mean_squared_error(y_test, y_pred))
     r2 = r2_score(y_test, y_pred)
 
-    print("\n✅ Final Evaluation")
+    print("\ Final Evaluation")
     print(f"RMSE: {rmse:.2f}")
     print(f"R²:   {r2:.3f}")
 
@@ -171,25 +171,43 @@ def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=12):
     print(f"Naive lag-{h} — RMSE:  R²: {baseline_r2:.3f}")
 
 
-    return model, test["Date"], y_test, y_pred, rmse, r2
+    return model, test["Date"], y_test, y_pred, rmse, r2, X_train, y_train
 
 
 # ====================================================
-# 4️⃣ PLOTTING & SAVING
+# PLOTTING & SAVING
 # ====================================================
 
-def plot_predictions(dates, y_test, y_pred, save_path: Path):
+def plot_predictions(dates, df, y_test, y_pred, save_path: Path):
+    last_train_date = df["Date"].max() - pd.Timedelta(weeks=20)
+    train_df = df[df["Date"] <= last_train_date].dropna()
+    
+
+    train_grouped = train_df.groupby('Date').agg({'Weekly_Sales_cleaned':sum})
+
+    df_result = pd.DataFrame({
+        'Date': dates,
+        'Actual': y_test,
+        'Predicted': y_pred,   
+    })
+    grouped = df_result.groupby('Date').agg({'Actual':sum, 'Predicted': sum})
+
+
+
     plt.figure(figsize=(14, 6))
-    plt.plot(dates, y_test.values, label='Actual', color='blue')
-    plt.plot(dates, y_pred, label='Predicted', color='orange')
-    plt.title('🧭 Global XGBoost Forecasting — Actual vs Predicted')
+    plt.plot(grouped.index, grouped['Actual'], label='Actual', color='red')
+    plt.plot(grouped.index, grouped['Predicted'], label='Predicted', color='green')
+    plt.plot(train_grouped.index, train_grouped['Weekly_Sales_cleaned'], label='Train', color='black')
+    plt.title('Global XGBoost Forecasting — Actual vs Predicted')
     plt.xlabel('Date')
     plt.ylabel('Weekly Sales')
     plt.legend()
+    plt.grid(True)
     plt.tight_layout()
     plt.savefig(save_path)
-    plt.close()
-    print(f"📊 Plot saved to: {save_path}")
+    plt.show()
+
+    print(f" Plot saved to: {save_path}")
 
 
 def save_model_and_metrics(model, params, rmse, r2, models_dir: Path, results_dir: Path):
@@ -205,14 +223,14 @@ def save_model_and_metrics(model, params, rmse, r2, models_dir: Path, results_di
     metrics_df = pd.DataFrame([{"RMSE": rmse, "R2": r2, **params}])
     metrics_df.to_csv(metrics_path, index=False)
 
-    print(f"💾 Model saved to: {model_path}")
-    print(f"📑 Metrics saved to: {metrics_path}")
+    print(f" Model saved to: {model_path}")
+    print(f" Metrics saved to: {metrics_path}")
 
  
 
 
 # ====================================================
-# 5️⃣ MAIN PIPELINE
+#  MAIN PIPELINE
 # ====================================================
 
 def run_pipeline(n_trials=30):
@@ -221,12 +239,12 @@ def run_pipeline(n_trials=30):
     results_dir = SCRIPT_DIR.parent / 'results'
     models_dir = SCRIPT_DIR.parent / 'saved_models'
 
-    print("📥 Loading data...")
+    print(" Loading data...")
     df = pd.read_csv(data_path, parse_dates=["Date"])
-    print(f"✅ Data loaded: {df.shape}")
+    print(f" Data loaded: {df.shape}")
 
     # Feature Engineering
-    print("🧪 Feature engineering...")
+    print(" Feature engineering...")
     df = aggregate_data(df)
     df = create_lag_rolling_features(df)
 
@@ -239,7 +257,7 @@ def run_pipeline(n_trials=30):
     ]
 
     # Optuna Hyperparameter Tuning
-    print(f"\n🚀 Starting Optuna hyperparameter tuning ({n_trials} trials)...")
+    print(f"\n Starting Optuna hyperparameter tuning ({n_trials} trials)...")
     sampler = TPESampler(seed=42)
     study = optuna.create_study(direction="maximize", sampler=sampler)
     study.optimize(
@@ -248,7 +266,7 @@ def run_pipeline(n_trials=30):
         show_progress_bar=True
     )
 
-    print("\n🏆 Best Hyperparameters:")
+    print("\n Best Hyperparameters:")
     for k, v in study.best_params.items():
         print(f"  {k}: {v}")
 
@@ -259,7 +277,7 @@ def run_pipeline(n_trials=30):
 
     # Plot
     plot_path = results_dir / "xgboost_predictions.png"
-    plot_predictions(dates, y_test, y_pred, plot_path)
+    plot_predictions(dates,df, y_test, y_pred, plot_path)
 
     # Save model and metrics
     save_model_and_metrics(model, study.best_params, rmse, r2, models_dir, results_dir)
