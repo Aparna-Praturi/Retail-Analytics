@@ -136,7 +136,7 @@ def optuna_objective(trial, df, feature_cols, target_col):
 # 3️TRAIN FINAL MODEL & EVALUATE
 # ====================================================
 
-def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=12):
+def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=20):
    
     last_train_date = df["Date"].max() - pd.Timedelta(weeks=horizon)
 
@@ -178,7 +178,7 @@ def train_and_evaluate(df, best_params, feature_cols, target_col, horizon=12):
 # PLOTTING & SAVING
 # ====================================================
 
-def plot_predictions(dates, df, y_test, y_pred, save_path: Path):
+def plot_predictions(dates, df, y_test, y_pred, save_path: Path, chain_test_result_path,chain_train_result_path):
     last_train_date = df["Date"].max() - pd.Timedelta(weeks=20)
     train_df = df[df["Date"] <= last_train_date].dropna()
     
@@ -191,6 +191,10 @@ def plot_predictions(dates, df, y_test, y_pred, save_path: Path):
         'Predicted': y_pred,   
     })
     grouped = df_result.groupby('Date').agg({'Actual':sum, 'Predicted': sum})
+    
+    grouped.to_csv(chain_test_result_path, index=True)
+    train_grouped.to_csv(chain_train_result_path, index=True)
+    
 
 
 
@@ -271,13 +275,15 @@ def run_pipeline(n_trials=30):
         print(f"  {k}: {v}")
 
     # Train Final Model & Evaluate
-    model, dates, y_test, y_pred, rmse, r2 = train_and_evaluate(
+    model, dates, y_test, y_pred, rmse, r2, X_train, y_train = train_and_evaluate(
         df, study.best_params, feature_cols, target_col
     )
 
     # Plot
     plot_path = results_dir / "xgboost_predictions.png"
-    plot_predictions(dates,df, y_test, y_pred, plot_path)
+    chain_test_result_path = results_dir/"Global_train_result"
+    chain_train_result_path = results_dir/"Global_test_result"
+    plot_predictions(dates,df, y_test, y_pred, plot_path, chain_test_result_path,chain_train_result_path)
 
     # Save model and metrics
     save_model_and_metrics(model, study.best_params, rmse, r2, models_dir, results_dir)
