@@ -31,7 +31,7 @@ short_df, long_df, df_cleaned,global_test,global_train = load_data()
 # Dashboard Title
 # =========================
 # st.set_page_config(page_title="Sales Forecasting Dashboard", layout="wide")
-st.title("📊 Sales Forecasting Dashboard")
+st.title(" Sales Forecasting Dashboard")
 st.markdown("""
 This interactive dashboard visualizes **global** and **store-level** sales forecasts.
 You can view short-term & long-term predictions, and compare **two stores** side by side.
@@ -67,7 +67,7 @@ st.plotly_chart(fig_global, use_container_width=True)
 # =========================
 # Store-Level Comparison Section
 # =========================
-st.subheader("🏪 Store-Level Forecasting & Comparison")
+st.subheader(" Store-Level Forecasting & Comparison")
 
 store_list = sorted(short_df["Store"].unique())
 col_sel1, col_sel2 = st.columns(2)

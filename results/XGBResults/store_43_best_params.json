@@ -1,1 +1,0 @@
-{"params": {"n_estimators": 301, "max_depth": 9, "learning_rate": 0.07828642720707331, "subsample": 0.8934187549890396, "colsample_bytree": 0.7807842964575924, "min_child_weight": 8, "gamma": 1.8926244082096162, "reg_lambda": 3.7420258752516435, "reg_alpha": 4.934596034729544}, "use_log": true}

@@ -281,8 +281,8 @@ def run_pipeline(n_trials=30):
 
     # Plot
     plot_path = results_dir / "xgboost_predictions.png"
-    chain_test_result_path = results_dir/"Global_train_result"
-    chain_train_result_path = results_dir/"Global_test_result"
+    chain_test_result_path = results_dir / "Global_test_result.csv"
+    chain_train_result_path = results_dir / "Global_train_result.csv"
     plot_predictions(dates,df, y_test, y_pred, plot_path, chain_test_result_path,chain_train_result_path)
 
     # Save model and metrics
