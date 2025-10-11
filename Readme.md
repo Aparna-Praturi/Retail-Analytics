@@ -114,13 +114,38 @@ Used Silhouette and Elbow methods for optimal cluster selection.
 ![Silhouette score and number of clusters](results/Elbow%20method%20and%20silhouette%20score%20for%20number%20of%20clusters.png)
 Store and Dept segmentation via K-Means and Agglomerative.
 ![Store Clustering](results/Clustering%20using%20various%20methods.png)
+🧭 Segmentation Insights
 
+Cluster 0 (Large & Volatile Stores)
+
+- High median sales but strong seasonality and higher volatility (4–6% anomalies).
+
+- Weak markdown correlation → promotions have limited impact.
+
+- Lower sales per store size → under-utilized space.
+   Key Actions:
+- Focus forecasting on seasonal peaks, cut blanket discounts, and optimize product mix for better space efficiency.
+
+Cluster 1 (Small & Stable Stores)
+
+- Lower sales but highly stable, predictable demand.
+
+- Stronger markdown correlation → promotions work well here.
+
+- Higher sales per size → efficient space use.
+ Key Actions:
+Use targeted markdowns, maintain lean inventory, and explore expansion or pilot launches in these efficient stores.
 
 **4. Market Basket Analysis**
 
 Implemented Apriori algorithm to find association rules.
 
 Used metrics: support, confidence, and lift.
+![Support vs Confidence](results/Support%20vs%20Confidence.png)  
+Most rules cluster at high confidence (>0.9) and moderate support (0.3–0.6), meaning several product pairs are reliably co-purchased, though not necessarily across all transactions.
+ Business Implication:
+Focus cross-sell efforts on these high-confidence, mid-support rules — they represent consistent but not over-saturated co-purchases (ideal for bundle promotions).
+
 
 Focused on top 10 rules with high lift for actionable insights.
 ### Top 10 Association Rules (by Lift)
@@ -137,8 +162,24 @@ Focused on top 10 rules with high lift for actionable insights.
 | 9 | 37 | 49, 98 | 0.3818 | 0.9538 | **1.4854** |
 | 10 | 37 | 49, 93 | 0.3890 | 0.9717 | **1.4831** |
 
+| Observation                                 | Business Interpretation                                                                                                                |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| High lift (1.73) for {37 → 96, 58}          | Strong **triplet dependency** — indicates frequent joint purchase patterns, suitable for *bundle-based discounts*.                     |
+| Repeated appearance of {37, 49, 58, 94, 96} | Suggests a **core product ecosystem** — optimizing shelf placement or recommendation engine around these can drive basket size.        |
+| Confidence >0.9 in most rules               | Customers show **habitual pairing** behavior, ideal for loyalty and repeat-purchase marketing.                                         |
+| Moderate support (~0.35)                    | These combinations aren’t universal, so **target promotions selectively** to stores or segments where these co-purchases are frequent. |
+
+
 ![Network Plot](results/Network%20plot.png)  
-![Support vs Confidence](results/Support%20vs%20Confidence.png)  
+Insight:
+Department 37 acts as a central hub, frequently co-occurring with 49, 58, 94, and 96 — these edges also have the highest lift.
+Business Implication:
+- Create bundled offers around Department 37 items (it triggers multiple complementary purchases).
+- Position these departments adjacently in stores or cross-promote online (e.g., “Customers buying from Dept 37 also purchase from 49 and 58”).
+
+
+Product category 37 is the anchor department for cross-selling opportunities. Most high-lift combinations involve 49, 58, 94, and 96, making them strong candidates for co-marketing, joint offers, and adjacency planning.
+These insights directly guide planogram optimization, personalized recommendations, and campaign targeting.
 
 **5. Anomaly Detection**
 
@@ -247,6 +288,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 
 
