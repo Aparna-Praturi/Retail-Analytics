@@ -1,3 +1,5 @@
+# Retail Intelligence
+
 This repository implements a comprehensive **Retail Analytics pipeline** that spans the full lifecycle of data science in retail — from raw data to actionable insights and deployment.
 
 It combines:
@@ -17,6 +19,8 @@ It combines:
  7. Streamlit app for interactive forecasting and analysis
 
  8. Error Analysis
+
+## Repo Structure
 
 ```plaintext
 Retail Analytics/
@@ -78,7 +82,7 @@ Retail Analytics/
 └── README.md                           # This documentation
 ```
 
-**Problem Statement**
+## **Problem Statement**
 
 Retailers face three major challenges:
 
@@ -90,9 +94,9 @@ Retailers face three major challenges:
 
 This project provides a unified analytics workflow to address all three using statistical and machine learning approaches.
 
-**Data Flow & Methodology**
+## **Data Flow & Methodology**
 
-**1. Data Preprocessing:**
+### **1. Data Preprocessing:**</u>
 
 Merge sales, store, and feature datasets.
 
@@ -102,7 +106,7 @@ Create lag and rolling-window features for temporal modeling.
 
 Generate holiday and event-based dummy variables.
 
-**2. Exploratory Data Analysis (EDA):**
+### **2. Exploratory Data Analysis (EDA):**
 
 Analyze sales trends and seasonality by store and department.
 
@@ -110,13 +114,13 @@ Visualize macroeconomic effects (CPI, fuel price, unemployment).
 
 Identify high-growth vs stagnant departments.
 
-**3. Segmentation:**
+### **3. Segmentation:**
 
 Used Silhouette and Elbow methods for optimal cluster selection.
 ![Silhouette score and number of clusters](results/Elbow%20method%20and%20silhouette%20score%20for%20number%20of%20clusters.png)
 Store and Dept segmentation via K-Means and Agglomerative.
 ![Store Clustering](results/Clustering%20using%20various%20methods.png)
-🧭 Segmentation Insights
+#### Segmentation Insights
 
 Cluster 0 (Large & Volatile Stores)
 
@@ -138,19 +142,19 @@ Cluster 1 (Small & Stable Stores)
  Key Actions:
 Use targeted markdowns, maintain lean inventory, and explore expansion or pilot launches in these efficient stores.
 
-**4. Market Basket Analysis**
+### **4. Market Basket Analysis**
 
 Implemented Apriori algorithm to find association rules.
 
 Used metrics: support, confidence, and lift.
 ![Support vs Confidence](results/Support%20vs%20Confidence.png)  
-Most rules cluster at high confidence (>0.9) and moderate support (0.3–0.6), meaning several product pairs are reliably co-purchased, though not necessarily across all transactions.
- Business Implication:
-Focus cross-sell efforts on these high-confidence, mid-support rules — they represent consistent but not over-saturated co-purchases (ideal for bundle promotions).
+- Most rules cluster at high confidence (>0.9) and moderate support (0.3–0.6), meaning several product pairs are reliably co-purchased, though not necessarily across all transactions.
+ #### Business Implication:
+- Focus cross-sell efforts on these high-confidence, mid-support rules — they represent consistent but not over-saturated co-purchases (ideal for bundle promotions).
 
 
-Focused on top 10 rules with high lift for actionable insights.
-### Top 10 Association Rules (by Lift)
+- Focused on top 10 rules with high lift for actionable insights.
+#### Top 10 Association Rules (by Lift)
 | Rank | Antecedents | Consequents | Support | Confidence | Lift |
 |------|--------------|-------------|----------|-------------|------|
 | 1 | 37 | 96, 58 | 0.3128 | 0.7814 | **1.7310** |
@@ -183,7 +187,7 @@ Business Implication:
 Product category 37 is the anchor department for cross-selling opportunities. Most high-lift combinations involve 49, 58, 94, and 96, making them strong candidates for co-marketing, joint offers, and adjacency planning.
 These insights directly guide planogram optimization, personalized recommendations, and campaign targeting.
 
-**5. Anomaly Detection**
+### **5. Anomaly Detection**
 
 Using Isolation Forest and Local Outlier Factor
 ![Isolation Forest and LOF](results/anomaly_detection_IF_LOF.png)
@@ -197,7 +201,7 @@ The top panel decomposes weekly sales into trend, seasonality, and residuals.
 The bottom panel overlays detected anomalies (red = statistical outliers, green = rolling-window anomalies).
 Spikes in residuals coincide with red markers, confirming the model’s sensitivity to sharp, non-seasonal fluctuations.
   
-**6.Forecasting**
+### **6.Forecasting**
 
 Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 
@@ -218,10 +222,10 @@ Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 ![SARIMAX Forecast](results/shortterm%20forecasting%20using%20sarimax%20for%20store%2010.png)
 ![LightGBM Forecast](results/shortterm%20forecasting%20using%20LightGBM%20for%20store%2010.png)  
 
-**7. Forecasting app**
+### **7. Forecasting app**
 ![App_screen_grab](results/app_pic.png)  
 
-***8. Error Analysis***
+### **8. Error Analysis**
 
 
 Model diagnostics were performed to assess forecast robustness and model performance and comparision
@@ -229,7 +233,7 @@ Model diagnostics were performed to assess forecast robustness and model perform
 [See full notebook →](notebooks/Error%20Analysis.ipynb)
 
 
-**Run Instructions**
+## **Run Instructions**
  **Step 1: Environment Setup**
 - `python -m venv .venv`
 - `source .venv/bin/activate`  # Windows: `.venv\Scripts\activate`
@@ -248,7 +252,7 @@ Model diagnostics were performed to assess forecast robustness and model perform
  **Step 4: Launch Forecasting Dashboard**
 - `streamlit run forecasting-app.py`
 
-**Project Status**
+## **Project Status**
 
 Current phase completed — end-to-end retail analytics pipeline implemented. Further improvements (error analysis & pipeline refactor) planned after completing other projects.
 
@@ -297,6 +301,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 
 
