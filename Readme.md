@@ -1,174 +1,192 @@
-# 🛒 Retail Analytics — End-to-End Retail Intelligence Platform
+This repository implements a comprehensive Retail Analytics pipeline that spans the full lifecycle of data science in retail — from raw data to actionable insights and deployment.
 
-**Generated:** Important project README to describe the repo, structure, methods, results and how to reproduce results.
+It combines:
 
----
+ 1. Data preprocessing and feature engineering
 
-## 📘 Overview
-This repository implements a full retail analytics pipeline from raw sales data to business-ready outputs:
+ 2. Exploratory Data Analysis (EDA)
 
-- Exploratory Data Analysis (EDA) at store & department granularity  
-- Store & department **segmentation** (clustering)  
-- **Market-basket / association rule** mining for cross-sell insight  
-- **Anomaly detection** (STL/STK decomposition + Isolation Forest / LOF)  
-- Short-term and long-term **forecasting** (XGBoost, LightGBM, Prophet, hybrid)  
-- An interactive **Streamlit forecasting dashboard** (`forecasting-app.py`) for stakeholders
+ 3. Store and department segmentation
 
----
+ 4. Market basket analysis
 
+ 5. Anomaly detection
 
----
+ 6. Sales forecasting (short- and long-term)
 
-##  Problem statement
-Retail chains need accurate, interpretable demand forecasts at the store × department level, plus behavioral insights to guide promotions, inventory and placement decisions. This repo addresses:
-
-- Forecast weekly sales (short and long horizons) for stores & departments  
-- Group stores/departments into actionable segments (for targeted strategies)  
-- Discover product/department co-purchases (market-basket rules) to increase basket size  
-- Detect anomalies in sales time-series so forecasts are robust and business actions can be taken quickly
-
----
-
-##  Data & Core Inputs
-- `data/raw/sales.csv` — master timeseries of weekly sales by Store and Department  
-- `data/raw/stores.csv` — store metadata (type, location, size, etc.)  
-- `data/raw/features.csv` — merged features including macro indicators (CPI, fuel price, unemployment)  
-- `data/processed/` — cleaned and preprocessed datasets used by models and notebooks
-
----
-
-##  Methodology / Pipeline
-1. **Preprocessing** (`src/preprocess.py`)  
-   - Join sales with store metadata and macro indicators  
-   - Impute missing values, fix outliers
-2. **EDA** (`notebooks/EDA.ipynb`)  
-   - Inspect seasonality, store-wise trends, department contributions, correlations with macros  
-3. **Segmentation** (`src/store_segmentation.py`, `notenooks/Dept-Segmentation.ipynb`)  
-   - KMeans; Elbow & Silhouette analysis; visualize using PCA  
-4. **Market-basket Analysis** (`src/marketbasket.py`)  
-   - Aggregate transactional data to department-level baskets; run Apriori / association-rule mining; compute support/confidence/lift  
-5. **Anomaly Detection** (`src/anomaly_detection.py`)  
-   - Time-series decomposition (STL/STK), rolling z-score, Isolation Forest / LOF 
-6. **Forecasting**  
-   - **Global model**: single model trained across all series (global-forecasting-model.py)  
-   - **Per-store** long-term: XGBoost  / Prophet pipelines (longterm-demand-forecasting.py)  
-   - **Short-term** SARIMAX / LightGBM (shortterm-demand-forecasting-copy.py)  
-   - Model evaluation with RMSE / MAE / R²; per-store best model recorded in `results/longterm_best_models_summary.csv`  
-7. **Deployment**: `forecasting-app.py` (Streamlit) loads `results/*` files and saved models to provide interactive forecasts
-
----
-
-## Results — concise summary (from `results/`)
-> These numbers / file references are taken from CSVs in `results/` included in the repository.
-
-**Global model (results/global_model_metrics.csv)**  
-| Metric | Value |
-|--------|-------:|
-| RMSE   | 4,779.57 |
-| R²     | 0.9526 |
-
-**Per-store performance**  
-- **Median RMSE across stores:** ≈ 4,800 (see `results/longterm_best_models_summary.csv`)  
-- Per-store best-models and their chosen hyperparameters are in `results/longterm_best_models_summary.csv` and `results/longterm_forecast_results.csv`.
-
-**Forecast files (examples)**  
-- `results/forecast_results.csv` — consolidated forecast outputs  
-- `results/longterm_forecast_results.csv` — long-horizon forecasts per store  
-- `results/shortterm_forecast_results_full.csv` / `shortterm_forecast_results_tuned.csv` — short-term forecasts & tuned variants
-Long term forecast results(example : Store 10)
-- `results/Longterm forecasting using LightGBM for store 10.png`
-- `results/Longterm forecasting using XGBoost for store 10.png`
-Short term forecast results(example : Store 10):
--`results/shortterm forecasting using sarimax for store 10.png`
--`results/shortterm forecasting using LightGBM for store 10.png`
-
----
-
-##  Segmentation (Store & Department)
-**What was done**
-- KMeans and hierarchical clustering were run using features such as mean weekly sales, volatility (std), seasonality strength, and macro sensitivity.
-- Elbow and silhouette analysis used to choose cluster count.
-
-**Key clusters (illustrative)**  
-- **Cluster 0 — Flagship / High-volume stores:** Big-volume stores/depts with seasonal peaks, volatile demand, and more anomalies. 
-
-- **Cluster 1 — Low-volume / Seasonal stores:**Smaller, stable stores/depts with predictable sales. Markdown-driven — promotions play a stronger role in boosting performance.
-
-**Files & visualizations**
-- `results/Clustering using various methods.png`  
-- `results/Elbow method and silhouette score for number of clusters.png`  
-- `results/Features for different clusters.png`
-
-**Business use**
-- Different forecasting strategies or inventory buffers by cluster; different promotional policies.
-
----
-
-##  Market-basket Analysis
-**What was done**
-- Association rule mining on transactional data aggregated to department-level baskets.
-- Rules filtered by support/confidence/lift thresholds to extract actionable co-purchases.
-
-**Top rules** (sample / illustrative — full list in `results/top_rules.csv`):
+ 7. Streamlit app for interactive forecasting and analysis
 
 
-**Visuals**
-- `results/Network plot.png`  
-- `results/Support vs Confidence.png`  
-- `results/Lift between 1-1 Antecedents and Consequents.png`
-- `results/Network plot.png`
+Retail Analytics/
+├── .git/                          # Git version control metadata
+├── .gitattributes
+├── .gitignore
+├── .venv/                         # Local virtual environment (optional)
+│
+├── data/
+│   ├── raw/
+│   │   ├── features.csv           # Store-level macroeconomic and metadata features
+│   │   ├── sales.csv              # Weekly sales by store and department
+│   │   └── stores.csv             # Store type, size, and location information
+│   │
+│   └── processed/
+│       ├── cleaned_data.csv       # Cleaned dataset used for analysis
+│       └── preprocessed_data.csv  # Final processed dataset ready for modeling
+│
+├── notebooks/
+│   ├── EDA.ipynb
+│   ├── Store Segmentation.ipynb
+│   ├── Department-Segmentation.ipynb
+│   ├── Market-Basket Analysis.ipynb
+│   ├── Anomaly-Detection.ipynb
+│   ├── Longterm-Demand-Forecasting.ipynb
+│   ├── shortterm-Demand-Forecasting.ipynb
+│   ├── global-model.ipynb
+│   └── Error Analysis.ipynb
+│
+├── src/
+│   ├── preprocess.py                     # Data preprocessing and feature creation
+│   ├── global-forecasting-model.py       # Global forecasting model pipeline
+│   ├── longterm-demand-forecasting.py    # Store-level long-term forecasting
+│   ├── shortterm-demand-forecasting-copy.py # Short-term forecasting models
+│   ├── dept_segmentation.py              # Department clustering logic
+│   ├── store_segmentation.py             # Store-level segmentation
+│   ├── marketbasket.py                   # Association rule mining pipeline
+│   ├── anomaly_detection.py              # Time-series anomaly detection
+│   └── utils.py                          # Common helper functions (if present)
+│
+├── results/
+│   ├── global_model_metrics.csv          # RMSE, R², and parameters of global model
+│   ├── longterm_best_models_summary.csv  # Best model per store summary
+│   ├── longterm_forecast_results.csv     # Forecasts per store
+│   ├── forecast_results.csv              # Combined forecasts summary
+│   ├── shortterm_forecast_results_full.csv
+│   ├── shortterm_forecast_results_tuned.csv
+│   ├── top_rules.csv                     # Market basket rules (support/confidence/lift)
+│   │
+│   ├── Clustering using various methods.png
+│   ├── Elbow method and silhouette score for number of clusters.png
+│   ├── Departments with strong positive correlations.png
+│   ├── Features for different clusters.png
+│   ├── Network plot.png
+│   ├── Support vs Confidence.png
+│   ├── Lift between Antecedents and Consequents.png
+│   ├── STK Decomposition along with rolling anomalies of Store 40, Dept 60.png
+│   ├── chain_forecast_plot.png
+│   ├── Longterm forecasting using LightGBM for store 10.png
+│   ├── Longterm forecasting using XGBoost for store 10.png
+│   ├── Longterm forecasting usingProphet for store 10.png
+│   └── xgboost_predictions.png
+│
+├── saved_models/
+│   ├── Chain/                          # Aggregated/global models
+│   ├── Store/                          # Per-store models (LightGBM, Prophet, etc.)
+│   └── short-term/Store/               # Short-term per-store models
+│
+├── forecasting-app.py                  # Streamlit dashboard for interactive forecasting
+├── requirements.txt                    # Python dependencies
+└── README.md                           # This documentation
 
-**Business use**
-- Use for cross-promotion, bundle suggestions, and store layout decisions.
 
----
+**Problem Statement**
 
-##  Anomaly Detection
-**Process**
-- STL/STK decomposition per store-department, rolling anomaly detection on residuals, then flagged via Isolation Forest / LOF.
+Retailers face three major challenges:
 
-**Example**
-- `results/STK Decomposition along with rolling anomalies of Store 40, Dept 60.png` — shows flagged weeks.
+1. Demand forecasting: Predicting store-level weekly sales with high accuracy.
 
-**Impact**
-- Removes/flags outlier weeks before training to improve model stability and to trigger business investigations (e.g., incorrect promo label, data error, or real surge).
+2. Behavioral segmentation: Understanding performance variation across stores and departments.
 
----
+3. Cross-sell discovery: Identifying co-purchased product categories to improve promotions.
 
-##  Forecasting (Details & Visuals)
-**Model families**
-- Gradient-boosted tree regressors: LightGBM & XGBoost (feature-rich models)  
-- Time series univariate: Prophet (per-store)  
-- Hybrid: ML model for baseline + time-series residual models
+This project provides a unified analytics workflow to address all three using statistical and machine learning approaches.
 
-**Representative visuals**
-- `results/shortterm forecasting using LightGBM for store 10.png`  
-- `results/Longterm forecasting using XGBoost for store 10.png`  
-- `results/Longterm forecasting usingProphet for store 10.png`  
-- `results/shortterm forecasting using sarimax for store 10.png`
-- `results/xgboost_predictions.png` (pred vs actual / residuals)  
-- 
+**Data Flow & Methodology**
+1. Data Preprocessing:
 
-**Evaluation**
-- Compare models on RMSE / MAE / R²; pick best per-store and save model artifacts in `saved_models/Store/` and `saved_models/short-term/Store/`.
+Merge sales, store, and feature datasets.
 
-**Deployment**
-- `forecasting-app.py` (Streamlit) loads `results/*` files and saved models to provide interactive forecasts.
--Example forecasting app screenshot :`results/app.pdf`
+Handle missing values, outliers, and anomalies.
 
----
+Create lag and rolling-window features for temporal modeling.
 
-##  Reproducibility — how to run everything
-> Note: if your repo root has a space in the folder name, either quote paths or rename folder to `Retail_Analytics`.
+Generate holiday and event-based dummy variables.
 
-1. Create a virtual environment and install:
-```bash
-python -m venv .venv
-# Linux / macOS:
-source .venv/bin/activate
-# Windows (PowerShell):
-# .venv\Scripts\Activate.ps1
+2. Exploratory Data Analysis (EDA):
 
-pip install -r requirements.txt
+Analyze sales trends and seasonality by store and department.
+
+Visualize macroeconomic effects (CPI, fuel price, unemployment).
+
+Identify high-growth vs stagnant departments.
+
+3. Segmentation:
+
+Store segmentation via K-Means and hierarchical clustering.
+
+Department segmentation via feature correlation and revenue patterns.
+
+Used Silhouette and Elbow methods for optimal cluster selection.
+
+![Store Clustering](results/Clustering%20using%20various%20methods.png)
+![Cluster Features](results/Features%20for%20different%20clusters.png)
+
+4. Market Basket Analysis
+
+Implemented Apriori algorithm to find association rules.
+
+Used metrics: support, confidence, and lift.
+
+Focused on top 10 rules with high lift for actionable insights.
+![Lift](results/Lift%20between%201-1%20Antecedents%20and%20Consequents.png)  
+![Network Plot](results/Network%20plot.png)  
+![Support vs Confidence](results/Support%20vs%20Confidence.png)  
+
+5. Anomaly Detection
+
+Decomposed sales series using STL.
+
+Detected anomalies via rolling statistics + Isolation Forest.
+
+Improves robustness of forecasting and model retraining.
+[Isolation Forest and LOF]("results/results\anomaly_detection_IF_LOF.png") 
+[STL Decomposition]("results/STK%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%203,%20Dept%2025.png") 
+  
+6.Forecasting
+
+Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
+
+Metric	Value
+RMSE	4779.57
+R²	0.9526
+Median RMSE (across stores)	~4800
+
+- LightGBM and XGBoost outperform Prophet for long-term horizons.
+- Longterm forecast
+![XGBoost Forecast](results/Longterm%20forecasting%20using%20XGBoost%20for%20store%2010.png)  
+![Prophet Forecast](results/Longterm%20forecasting%20usingProphet%20for%20store%2010.png)
+-Shortterm Forecast
+![SARIMAX Forecast](results/shortterm%20forecasting%20using%20sarimax%20for%20store%2010.png)
+![LightGBM Forecast](results/shortterm%20forecasting%20using%20LightGBM%20for%20store%2010.png)  
+
+7. Forecasting app
+[App_screen_grab](results/app.pdf)  
 
 
+**Run Instructions**
+Step 1: Environment Setup
+`python -m venv .venv`
+`source .venv/bin/activate`  # Windows: `.venv\Scripts\activate`
+`pip install -r requirements.txt`
+
+Step 2: Preprocess Data
+`python src/preprocess.py`
+
+Step 3: Run Pipelines
+`python src/longterm-demand-forecasting.py`
+`python src/shortterm-demand-forecasting-copy.py`
+`python src/marketbasket.py`
+`python src/store_segmentation.py`
+`python src/anomaly_detection.py`
+
+Step 4: Launch Forecasting Dashboard
+`streamlit run forecasting-app.py`
