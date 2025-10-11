@@ -171,7 +171,7 @@ Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 **7. Forecasting app**
 [App_screen_grab](results/app.pdf)  
 
-** 8. Error Analysis**
+***8. Error Analysis***
 
 
 Model diagnostics were performed to assess forecast robustness and model performance and comparision
@@ -179,23 +179,71 @@ Model diagnostics were performed to assess forecast robustness and model perform
 
 
 **Run Instructions**
-Step 1: Environment Setup
-`python -m venv .venv`
-`source .venv/bin/activate`  # Windows: `.venv\Scripts\activate`
-`pip install -r requirements.txt`
+ **Step 1: Environment Setup**
+- `python -m venv .venv`
+- `source .venv/bin/activate`  # Windows: `.venv\Scripts\activate`
+- `pip install -r requirements.txt`
 
-Step 2: Preprocess Data
-`python src/preprocess.py`
+ **Step 2: Preprocess Data**
+- `python src/preprocess.py`
 
-Step 3: Run Pipelines
-`python src/longterm-demand-forecasting.py`
-`python src/shortterm-demand-forecasting-copy.py`
-`python src/marketbasket.py`
-`python src/store_segmentation.py`
-`python src/anomaly_detection.py`
+ **Step 3: Run Pipelines**
+- `python src/longterm-demand-forecasting.py`
+- `python src/shortterm-demand-forecasting-copy.py`
+- `python src/marketbasket.py`
+- `python src/store_segmentation.py`
+- `python src/anomaly_detection.py`
 
-Step 4: Launch Forecasting Dashboard
-`streamlit run forecasting-app.py`
+ **Step 4: Launch Forecasting Dashboard**
+- `streamlit run forecasting-app.py`
+
+
+---
+
+## 👩‍💻 Created By
+
+**Aparna Praturi**  
+PhD (Physics) • AI & ML Engineer  
+📍 Focus: AI for Retail, BioPharma, and Scalable ML Systems  
+
+🔗 Connect with me:  
+- [GitHub](https://github.com/Aparna-Praturi)  
+- [LinkedIn](https://www.linkedin.com/in/aparna-praturi/)  
+- [Email](mailto:aparnaps777@gmail.com)
+
+---
+
+##  License
+
+This project is licensed under the **MIT License** — you are free to use, modify, and distribute it,  
+provided that proper credit is given.
+
+
+
+```text
+MIT License
+
+Copyright (c) 2025 Aparna Praturi
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the “Software”), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
 
 
 
