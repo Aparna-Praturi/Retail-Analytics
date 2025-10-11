@@ -126,9 +126,9 @@ def feature_engineer(df_merged):
 def detect_anomalies():
     SCRIPT_DIR = Path(__file__).resolve().parent
 
-    # ------------------------------------------------
-    # 1. Define all I/O paths and loading data
-    # ------------------------------------------------
+ 
+    #  Define all I/O paths and loading data
+    
     processed_data_path = SCRIPT_DIR.parent/'data'/'processed'/'preprocessed_data.csv'
     
     # Defining output path
