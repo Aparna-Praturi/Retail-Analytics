@@ -1,4 +1,4 @@
-This repository implements a comprehensive Retail Analytics pipeline that spans the full lifecycle of data science in retail — from raw data to actionable insights and deployment.
+This repository implements a comprehensive **Retail Analytics pipeline** that spans the full lifecycle of data science in retail — from raw data to actionable insights and deployment.
 
 It combines:
 
@@ -92,16 +92,17 @@ Retail Analytics/
 
 Retailers face three major challenges:
 
-1. Demand forecasting: Predicting store-level weekly sales with high accuracy.
+**1. Demand forecasting:** Predicting store-level weekly sales with high accuracy.
 
-2. Behavioral segmentation: Understanding performance variation across stores and departments.
+**2. Behavioral segmentation:** Understanding performance variation across stores and departments.
 
-3. Cross-sell discovery: Identifying co-purchased product categories to improve promotions.
+**3. Cross-sell discovery:** Identifying co-purchased product categories to improve promotions.
 
 This project provides a unified analytics workflow to address all three using statistical and machine learning approaches.
 
 **Data Flow & Methodology**
-1. Data Preprocessing:
+
+**1. Data Preprocessing:**
 
 Merge sales, store, and feature datasets.
 
@@ -111,7 +112,7 @@ Create lag and rolling-window features for temporal modeling.
 
 Generate holiday and event-based dummy variables.
 
-2. Exploratory Data Analysis (EDA):
+**2. Exploratory Data Analysis (EDA):**
 
 Analyze sales trends and seasonality by store and department.
 
@@ -119,18 +120,16 @@ Visualize macroeconomic effects (CPI, fuel price, unemployment).
 
 Identify high-growth vs stagnant departments.
 
-3. Segmentation:
+**3. Segmentation:**
 
-Store segmentation via K-Means and hierarchical clustering.
-
-Department segmentation via feature correlation and revenue patterns.
+Store and Dept segmentation via K-Means and Agglomerative.
 
 Used Silhouette and Elbow methods for optimal cluster selection.
 
 ![Store Clustering](results/Clustering%20using%20various%20methods.png)
 ![Cluster Features](results/Features%20for%20different%20clusters.png)
 
-4. Market Basket Analysis
+**4. Market Basket Analysis**
 
 Implemented Apriori algorithm to find association rules.
 
@@ -141,17 +140,17 @@ Focused on top 10 rules with high lift for actionable insights.
 ![Network Plot](results/Network%20plot.png)  
 ![Support vs Confidence](results/Support%20vs%20Confidence.png)  
 
-5. Anomaly Detection
+**5. Anomaly Detection**
 
 Decomposed sales series using STL.
 
 Detected anomalies via rolling statistics + Isolation Forest.
 
 Improves robustness of forecasting and model retraining.
-[Isolation Forest and LOF]("results/results\anomaly_detection_IF_LOF.png") 
-[STL Decomposition]("results/STK%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%203,%20Dept%2025.png") 
+![Isolation Forest and LOF](results/anomaly%20detection%20IF%20LOF.png)) 
+![STL Decomposition](results/STL%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%203,%20Dept%2025.png) 
   
-6.Forecasting
+**6.Forecasting**
 
 Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 
@@ -168,7 +167,7 @@ Median RMSE (across stores)	~4800
 ![SARIMAX Forecast](results/shortterm%20forecasting%20using%20sarimax%20for%20store%2010.png)
 ![LightGBM Forecast](results/shortterm%20forecasting%20using%20LightGBM%20for%20store%2010.png)  
 
-7. Forecasting app
+**7. Forecasting app**
 [App_screen_grab](results/app.pdf)  
 
 
@@ -190,3 +189,4 @@ Step 3: Run Pipelines
 
 Step 4: Launch Forecasting Dashboard
 `streamlit run forecasting-app.py`
+
