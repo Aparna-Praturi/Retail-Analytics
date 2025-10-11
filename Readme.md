@@ -16,7 +16,7 @@ It combines:
 
  7. Streamlit app for interactive forecasting and analysis
 
-
+```plaintext
 Retail Analytics/
 ├── .git/                          # Git version control metadata
 ├── .gitattributes
@@ -56,27 +56,15 @@ Retail Analytics/
 │   └── utils.py                          # Common helper functions (if present)
 │
 ├── results/
-│   ├── global_model_metrics.csv          # RMSE, R², and parameters of global model
-│   ├── longterm_best_models_summary.csv  # Best model per store summary
-│   ├── longterm_forecast_results.csv     # Forecasts per store
-│   ├── forecast_results.csv              # Combined forecasts summary
-│   ├── shortterm_forecast_results_full.csv
-│   ├── shortterm_forecast_results_tuned.csv
-│   ├── top_rules.csv                     # Market basket rules (support/confidence/lift)
-│   │
+│   ├── global_model_metrics.csv           # Model performance summary
+│   ├── top_rules.csv                      # Market basket rules (support/confidence/lift)
 │   ├── Clustering using various methods.png
-│   ├── Elbow method and silhouette score for number of clusters.png
-│   ├── Departments with strong positive correlations.png
 │   ├── Features for different clusters.png
-│   ├── Network plot.png
-│   ├── Support vs Confidence.png
-│   ├── Lift between Antecedents and Consequents.png
-│   ├── STK Decomposition along with rolling anomalies of Store 40, Dept 60.png
-│   ├── chain_forecast_plot.png
 │   ├── Longterm forecasting using LightGBM for store 10.png
 │   ├── Longterm forecasting using XGBoost for store 10.png
-│   ├── Longterm forecasting usingProphet for store 10.png
-│   └── xgboost_predictions.png
+│   ├── STL Decomposition example.png
+│   └── (Other plots and forecast outputs omitted for brevity)
+
 │
 ├── saved_models/
 │   ├── Chain/                          # Aggregated/global models
@@ -86,7 +74,7 @@ Retail Analytics/
 ├── forecasting-app.py                  # Streamlit dashboard for interactive forecasting
 ├── requirements.txt                    # Python dependencies
 └── README.md                           # This documentation
-
+```
 
 **Problem Statement**
 
@@ -122,12 +110,11 @@ Identify high-growth vs stagnant departments.
 
 **3. Segmentation:**
 
-Store and Dept segmentation via K-Means and Agglomerative.
-
 Used Silhouette and Elbow methods for optimal cluster selection.
-
+![Silhouette score and number of clusters](results/Elbow%20method%20and%20silhouette%20score%20for%20number%20of%20clusters.png)
+Store and Dept segmentation via K-Means and Agglomerative.
 ![Store Clustering](results/Clustering%20using%20various%20methods.png)
-![Cluster Features](results/Features%20for%20different%20clusters.png)
+
 
 **4. Market Basket Analysis**
 
@@ -136,13 +123,26 @@ Implemented Apriori algorithm to find association rules.
 Used metrics: support, confidence, and lift.
 
 Focused on top 10 rules with high lift for actionable insights.
-![Lift](results/Lift%20between%201-1%20Antecedents%20and%20Consequents.png)  
+### Top 10 Association Rules (by Lift)
+| Rank | Antecedents | Consequents | Support | Confidence | Lift |
+|------|--------------|-------------|----------|-------------|------|
+| 1 | 37 | 96, 58 | 0.3128 | 0.7814 | **1.7310** |
+| 2 | 37 | 49, 58 | 0.3680 | 0.9193 | **1.6044** |
+| 3 | 37 | 96, 49 | 0.3215 | 0.8032 | **1.5392** |
+| 4 | 37 | 49, 54 | 0.3503 | 0.8750 | **1.5313** |
+| 5 | 37 | 58, 94 | 0.3618 | 0.9037 | **1.5200** |
+| 6 | 37 | 49, 94 | 0.3767 | 0.9410 | **1.5157** |
+| 7 | 37 | 80, 49 | 0.3880 | 0.9693 | **1.5136** |
+| 8 | 37 | 96, 54 | 0.3038 | 0.7589 | **1.5134** |
+| 9 | 37 | 49, 98 | 0.3818 | 0.9538 | **1.4854** |
+| 10 | 37 | 49, 93 | 0.3890 | 0.9717 | **1.4831** |
+
 ![Network Plot](results/Network%20plot.png)  
 ![Support vs Confidence](results/Support%20vs%20Confidence.png)  
 
 **5. Anomaly Detection**
 
-Improves robustness of forecasting and model retraining.
+Using Isolation Forest and Local Outlier Factor
 ![Isolation Forest and LOF](results/anomaly_detection_IF_LOF.png)
 Decomposed sales series using STL.
 ![STL Decomposition](results/STL%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%2040%2C%20Dept%2060.png)
@@ -151,10 +151,14 @@ Decomposed sales series using STL.
 
 Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 
-Metric	Value
-RMSE	4779.57
-R²	0.9526
-Median RMSE (across stores)	~4800
+| Metric | Value |
+|---------|--------|
+| RMSE | 4779.57 |
+| R² | 0.9526 |
+| Median RMSE (across stores) | ~4800 |
+
+
+![Global(Chain level) XGBoost Forecast](results/xgboost_predictions.png)
 
 - LightGBM and XGBoost outperform Prophet for long-term horizons.
 - Longterm forecast
@@ -186,6 +190,7 @@ Step 3: Run Pipelines
 
 Step 4: Launch Forecasting Dashboard
 `streamlit run forecasting-app.py`
+
 
 
 
