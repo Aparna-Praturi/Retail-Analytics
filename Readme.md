@@ -175,6 +175,7 @@ Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 
 
 Model diagnostics were performed to assess forecast robustness and model performance and comparision
+
 [See full notebook →](notebooks/Error%20Analysis.ipynb)
 
 
@@ -196,6 +197,8 @@ Model diagnostics were performed to assess forecast robustness and model perform
 
  **Step 4: Launch Forecasting Dashboard**
 - `streamlit run forecasting-app.py`
+
+**Project Status**
 
 Current phase completed — end-to-end retail analytics pipeline implemented. Further improvements (error analysis & pipeline refactor) planned after completing other projects.
 
@@ -244,6 +247,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 
 
