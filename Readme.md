@@ -147,7 +147,7 @@ Decomposed sales series using STL.
 Detected anomalies via rolling statistics + Isolation Forest.
 
 Improves robustness of forecasting and model retraining.
-![Isolation Forest and LOF](results/anomaly%20detection%20IF%20LOF.png)) 
+![Isolation Forest and LOF](results/anomaly_detection_IF_LOF.png)
 ![STL Decomposition](results/STL%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%203,%20Dept%2025.png) 
   
 **6.Forecasting**
@@ -189,4 +189,5 @@ Step 3: Run Pipelines
 
 Step 4: Launch Forecasting Dashboard
 `streamlit run forecasting-app.py`
+
 
