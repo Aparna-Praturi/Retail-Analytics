@@ -169,7 +169,7 @@ Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 ![LightGBM Forecast](results/shortterm%20forecasting%20using%20LightGBM%20for%20store%2010.png)  
 
 **7. Forecasting app**
-[App_screen_grab](results/app.pdf)  
+[App_screen_grab](results/app_pic.png)  
 
 ***8. Error Analysis***
 
@@ -247,6 +247,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 
 
