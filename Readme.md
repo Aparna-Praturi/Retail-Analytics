@@ -171,6 +171,12 @@ Models: LightGBM, XGBoost, Prophet, and hybrid ensembles.
 **7. Forecasting app**
 [App_screen_grab](results/app.pdf)  
 
+** 8. Error Analysis**
+
+
+Model diagnostics were performed to assess forecast robustness and model performance and comparision
+[See full notebook →](notebooks/Error%20Analysis.ipynb)
+
 
 **Run Instructions**
 Step 1: Environment Setup
@@ -190,6 +196,7 @@ Step 3: Run Pipelines
 
 Step 4: Launch Forecasting Dashboard
 `streamlit run forecasting-app.py`
+
 
 
 
