@@ -16,6 +16,8 @@ It combines:
 
  7. Streamlit app for interactive forecasting and analysis
 
+ 8. Error Analysis
+
 ```plaintext
 Retail Analytics/
 ├── .git/                          # Git version control metadata
@@ -185,8 +187,15 @@ These insights directly guide planogram optimization, personalized recommendatio
 
 Using Isolation Forest and Local Outlier Factor
 ![Isolation Forest and LOF](results/anomaly_detection_IF_LOF.png)
+
+Red points indicate anomalous sales weeks flagged by Isolation Forest (top) and Local Outlier Factor (bottom).
+LOF is better at detecting local outliers compared to Isolation Forest
+
 Decomposed sales series using STL.
 ![STL Decomposition](results/STL%20Decomposition%20along%20with%20rolling%20anomalies%20of%20Store%2040%2C%20Dept%2060.png)
+The top panel decomposes weekly sales into trend, seasonality, and residuals.
+The bottom panel overlays detected anomalies (red = statistical outliers, green = rolling-window anomalies).
+Spikes in residuals coincide with red markers, confirming the model’s sensitivity to sharp, non-seasonal fluctuations.
   
 **6.Forecasting**
 
@@ -288,6 +297,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
 
 
 
