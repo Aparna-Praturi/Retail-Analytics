@@ -1,4 +1,5 @@
-# CommerceSense — Data-to-Decision Retail Intelligence Pipeline
+# CommerceSense 
+## Data-to-Decision Retail Intelligence Pipeline
 
 CommerceSense is an end-to-end Retail Intelligence and Forecasting System that transforms raw sales data into actionable insights — combining data engineering, machine learning, and business analytics in one cohesive pipeline.
 
@@ -280,6 +281,7 @@ provided that proper credit is given.
 
 
 CommerceSense is an end-to-end Retail Intelligence and Forecasting System that transforms raw sales data into actionable insights — combining data engineering, machine learning, and business analytics in one cohesive pipeline.
+
 
 
 
